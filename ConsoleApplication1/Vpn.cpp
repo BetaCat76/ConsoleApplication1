@@ -46,6 +46,7 @@ void Vpn::createvpn(const wchar_t *name, const wchar_t *server, const wchar_t *u
 		pras->dwVpnStrategy = VS_Ikev2Only;
 	}
 
+	RasSetEntryProperties(NULL, name, pras, pras->dwSize, NULL, 0);
 	if (l2tp_psk == type)
 	{
 		RASCREDENTIALS ras_cre_psk = { 0 };
@@ -54,15 +55,14 @@ void Vpn::createvpn(const wchar_t *name, const wchar_t *server, const wchar_t *u
 		wcscpy_s(ras_cre_psk.szPassword, psk);
 		RasSetCredentials(NULL, name, &ras_cre_psk, FALSE);
 	}
-	else {
-		RasSetEntryProperties(NULL, name, pras, pras->dwSize, NULL, 0);
-		RASCREDENTIALS ras_cre = { 0 };
-		ras_cre.dwSize = sizeof(ras_cre);
-		ras_cre.dwMask = RASCM_UserName | RASCM_Password;
-		wcscpy_s(ras_cre.szUserName, username);
-		wcscpy_s(ras_cre.szPassword, password);
-		RasSetCredentials(NULL, name, &ras_cre, FALSE);
-	}
+
+	RASCREDENTIALS ras_cre = { 0 };
+	ras_cre.dwSize = sizeof(ras_cre);
+	ras_cre.dwMask = RASCM_UserName | RASCM_Password;
+	wcscpy_s(ras_cre.szUserName, username);
+	wcscpy_s(ras_cre.szPassword, password);
+	RasSetCredentials(NULL, name, &ras_cre, FALSE);
+
 
 	free(pras);
 }
