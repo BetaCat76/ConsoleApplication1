@@ -67,7 +67,7 @@ void Vpn::createvpn(const wchar_t *name, const wchar_t *server, const wchar_t *u
 	free(pras);
 }
 
-void Vpn::connectvpn()
+void Vpn::connectvpn(const wchar_t *username, const wchar_t *password)
 {
 	DWORD size = sizeof(RASDIALPARAMS);
 	LPRASDIALPARAMS pras= (LPRASDIALPARAMS)malloc(size);
