@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Vpn.h"
+#include <iostream>
 
 void Vpn::createvpn(const wchar_t *name, const wchar_t *server, const wchar_t *username, const wchar_t *password,
 	const wchar_t *psk, int type)
@@ -67,13 +68,222 @@ void Vpn::createvpn(const wchar_t *name, const wchar_t *server, const wchar_t *u
 	free(pras);
 }
 
-void Vpn::connectvpn(const wchar_t *username, const wchar_t *password)
+HRASCONN Vpn::connectvpn(const wchar_t * entryname, const wchar_t *username, const wchar_t *password)
 {
-	DWORD size = sizeof(RASDIALPARAMS);
-	LPRASDIALPARAMS pras= (LPRASDIALPARAMS)malloc(size);
-	memset(pras, 0, size);
-	pras->dwSize = size;
-	wcscpy_s(pras->szEntryName, L"");
+	RASDIALPARAMS pras;
+	ZeroMemory(&pras, sizeof(RASDIALPARAMS));
+	pras.dwSize = sizeof(RASDIALPARAMS);
+	lstrcpy(pras.szEntryName, entryname);
+	lstrcpy(pras.szUserName, username);
+	lstrcpy(pras.szPassword, password);
+
+	DWORD ret;
+	HRASCONN conn=NULL;
+	ret = RasDial(NULL, NULL, &pras, 0, &Vpn::RasDialFunc, &conn);
+	if (ret != 0) {
+		std::cout << ret;
+		std::cout << std::endl;
+	}
+	return conn;
+}
+
+void WINAPI Vpn::RasDialFunc(UINT unMsg, RASCONNSTATE rasconnstate, DWORD dwError)
+{
+	wchar_t szRasString[256] = { 0 }; // Buffer for storing the error string
+	wchar_t szTempBuf[256] = { 0 };  // Buffer used for printing out the text
+	if (dwError)  // Error occurred
+	{
+		RasGetErrorString(static_cast<UINT>(dwError), reinterpret_cast<LPWSTR>(szRasString), 256);
+		ZeroMemory(static_cast<LPVOID>(szTempBuf), sizeof(szTempBuf));
+		std::cout << szRasString;
+		return;
+	}
+
+	// Map each of the states of RasDial() and display on the screen
+	// the next state that RasDial() is entering
+	switch (rasconnstate)
+	{
+	case RASCS_OpenPort:
+		std::cout << "RASCS_OpenPort = " << rasconnstate;
+		std::cout << "Opening port...";
+		std::cout << std::endl;
+		//g_pFrame->setUserInfo("test","test","test","test","test");
+		break;
+	case RASCS_PortOpened:
+		std::cout << "RASCS_PortOpened = " << rasconnstate;
+		std::cout << "Port opened.";
+		std::cout << std::endl;
+		break;
+	case RASCS_ConnectDevice:
+		std::cout << "RASCS_ConnectDevice = " << rasconnstate;
+		std::cout << "Connecting device...";
+		std::cout << std::endl;
+		break;
+	case RASCS_DeviceConnected:
+		std::cout << "RASCS_DeviceConnected = " << rasconnstate;
+		std::cout << "Device connected.";
+		std::cout << std::endl;
+		break;
+	case RASCS_AllDevicesConnected:
+		std::cout << "RASCS_AllDevicesConnected = " << rasconnstate;
+		std::cout << "All devices connected.";
+		std::cout << std::endl;
+		break;
+	case RASCS_Authenticate:
+		std::cout << "RASCS_Authenticate = " << rasconnstate;
+		std::cout << "Authenticating...";
+		std::cout << std::endl;
+		break;
+	case RASCS_AuthNotify:
+		std::cout << "RASCS_AuthNotify = " << rasconnstate;
+		std::cout << "Authentication notify.";
+		std::cout << std::endl;
+		break;
+	case RASCS_AuthRetry:
+		std::cout << "RASCS_AuthRetry = \n" << rasconnstate;
+		std::cout << "Retrying authentication...";
+		std::cout << std::endl;
+		break;
+	case RASCS_AuthCallback:
+		std::cout << "RASCS_AuthCallback = " << rasconnstate;
+		std::cout << "Authentication callback...";
+		std::cout << std::endl;
+		break;
+	case RASCS_AuthChangePassword:
+		std::cout << "RASCS_AuthChangePassword = " << rasconnstate;
+		std::cout << "Change password...";
+		std::cout << std::endl;
+		break;
+	case RASCS_AuthProject:
+		std::cout << "RASCS_AuthProject = " << rasconnstate;
+		std::cout << "Projection phase started...";
+		std::cout << std::endl;
+		break;
+	case RASCS_AuthLinkSpeed:
+		std::cout << "RASCS_AuthLinkSpeed = " << rasconnstate;
+		std::cout << "Negoting speed...";
+		std::cout << std::endl;
+		break;
+	case RASCS_AuthAck:
+		std::cout << "RASCS_AuthAck = " << rasconnstate;
+		std::cout << "Authentication acknowledge...";
+		std::cout << std::endl;
+		break;
+	case RASCS_ReAuthenticate:
+		std::cout << "RASCS_ReAuthenticate = " << rasconnstate;
+		std::cout << "Retrying Authentication...";
+		std::cout << std::endl;
+		break;
+	case RASCS_Authenticated:
+		std::cout << "RASCS_Authenticated = " << rasconnstate;
+		std::cout << "Authentication complete.";
+		std::cout << std::endl;
+		break;
+	case RASCS_PrepareForCallback:
+		std::cout << "RASCS_PrepareForCallback = " << rasconnstate;
+		std::cout << "Preparing for callback...";
+		std::cout << std::endl;
+		break;
+	case RASCS_WaitForModemReset:
+		std::cout << "RASCS_WaitForModemReset = " << rasconnstate;
+		std::cout << "Waiting for modem reset...";
+		std::cout << std::endl;
+		break;
+	case RASCS_WaitForCallback:
+		std::cout << "RASCS_WaitForCallback = " << rasconnstate;
+		std::cout << "Waiting for callback...";
+		std::cout << std::endl;
+		break;
+	case RASCS_Projected:
+		std::cout << "RASCS_Projected = " << rasconnstate;
+		std::cout << "Projection completed.";
+		std::cout << std::endl;
+		break;
+	case RASCS_StartAuthentication:// Windows 95 only
+		std::cout << "RASCS_StartAuthentication = " << rasconnstate;
+		std::cout << "Starting authentication...";
+		std::cout << std::endl;
+		break;
+	case RASCS_CallbackComplete:   // Windows 95 only
+		std::cout << "RASCS_CallbackComplete = " << rasconnstate;
+		std::cout << "Callback complete.";
+		std::cout << std::endl;
+		break;
+	case RASCS_LogonNetwork:   // Windows 95 only
+		std::cout << "RASCS_LogonNetwork = " << rasconnstate;
+		std::cout << "Login to the network.";
+		std::cout << std::endl;
+		break;
+	case RASCS_SubEntryConnected:
+		std::cout << "RASCS_SubEntryConnected = " << rasconnstate;
+		std::cout << "Subentry connected.";
+		std::cout << std::endl;
+		break;
+	case RASCS_SubEntryDisconnected:
+		std::cout << "RASCS_SubEntryDisconnected = " << rasconnstate;
+		std::cout << "Subentry disconnected.";
+		std::cout << std::endl;
+		break;
+		//PAUSED STATES:
+	case RASCS_Interactive:
+		std::cout << "RASCS_Interactive = " << rasconnstate;
+		std::cout << "In Paused state: Interactive mode.";
+		std::cout << std::endl;
+		break;
+	case RASCS_RetryAuthentication:
+		std::cout << "RASCS_RetryAuthentication = " << rasconnstate;
+		std::cout << "In Paused state: Retry Authentication...";
+		std::cout << std::endl;
+		break;
+	case RASCS_CallbackSetByCaller:
+		std::cout << "RASCS_CallbackSetByCaller = " << rasconnstate;
+		std::cout << "In Paused state: Callback set by Caller.";
+		std::cout << std::endl;
+		break;
+	case RASCS_PasswordExpired:
+		std::cout << "RASCS_PasswordExpired = " << rasconnstate;
+		std::cout << "In Paused state: Password has expired...";
+		std::cout << std::endl;
+		break;
+	case RASCS_Connected: // = RASCS_DONE:
+		std::cout << "RASCS_Connected = " << rasconnstate;
+		std::cout << "#########Connection completed.";
+		//SetEvent(gEvent_handle);
+		std::cout << std::endl;
+		break;
+	case RASCS_Disconnected:
+		std::cout << "RASCS_Disconnected = " << rasconnstate;
+		std::cout << "Disconnecting...";
+		std::cout << std::endl;
+		break;
+	default:
+		std::cout << "Unknown Status = " << rasconnstate;
+		std::cout << "What are you going to do about it?";
+		std::cout << std::endl;
+		break;
+	}
+
+}
+
+bool Vpn::disconnect(const wchar_t * entryname)
+{
+	DWORD ret;
+	
+	return false;
+}
+
+void Vpn::getEntryConnection(const wchar_t * entryname)
+{
+	RASCONN arr[100];
+	DWORD arr_size = sizeof(arr);
+	ZeroMemory(&arr, arr_size);
+	arr[0].dwSize = sizeof(RASCONN);
+	
+	DWORD number_of_connection = 0;
+	DWORD ret=RasEnumConnections(arr, &arr_size, &number_of_connection);
+
+	std::cout << sizeof(RASCONN);
+	std::cout << "";
 }
 
 Vpn::Vpn()

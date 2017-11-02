@@ -18,7 +18,11 @@ class Vpn
 public:
 	static void createvpn(const wchar_t *name, const wchar_t *server, const wchar_t *username, const wchar_t *password,
 		const wchar_t *psk, int type);
-	static void connectvpn(const wchar_t *username, const wchar_t *password);
+	static HRASCONN connectvpn(const wchar_t * entryname, const wchar_t *username, const wchar_t *password);
+	static void WINAPI RasDialFunc(UINT unMsg, RASCONNSTATE rasconnstate, DWORD dwError);
+	static bool disconnect(const wchar_t * entryname);
+public:
+	static void getEntryConnection(const wchar_t * entryname);
 public:
 	Vpn();
 	~Vpn();
