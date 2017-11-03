@@ -267,12 +267,23 @@ void WINAPI Vpn::RasDialFunc(UINT unMsg, RASCONNSTATE rasconnstate, DWORD dwErro
 
 bool Vpn::disconnect(const wchar_t * entryname)
 {
-	DWORD ret;
-	
-	return false;
+	RASCONN conn;
+	bool ok = getEntryConnection(entryname, conn);
+	if (!ok)return false;
+	else
+	{
+		DWORD ret = RasHangUp(conn.hrasconn);
+		if (ret == ERROR_SUCCESS) {
+			return true;
+		}
+		else 
+		{
+			return false;
+		}
+	}
 }
 
-void Vpn::getEntryConnection(const wchar_t * entryname)
+bool Vpn::getEntryConnection(const wchar_t * entryname, RASCONN& conn)
 {
 	RASCONN arr[100];
 	DWORD arr_size = sizeof(arr);
@@ -282,8 +293,23 @@ void Vpn::getEntryConnection(const wchar_t * entryname)
 	DWORD number_of_connection = 0;
 	DWORD ret=RasEnumConnections(arr, &arr_size, &number_of_connection);
 
-	std::cout << sizeof(RASCONN);
-	std::cout << "";
+	bool ok = false;
+	for (DWORD i = 0; i < number_of_connection; i++) {
+		RASCONN temp = arr[i];
+		if (wcscmp(entryname, temp.szEntryName) == 0) {
+			conn = temp;
+			ok = true;
+			break;
+		}
+	}
+	return ok;
+}
+
+bool Vpn::deleteEntry(const wchar_t * entryname)
+{
+	DWORD ret;
+	ret = RasDeleteEntry(NULL, entryname);
+	return ret==0;
 }
 
 Vpn::Vpn()

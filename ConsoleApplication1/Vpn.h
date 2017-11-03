@@ -21,8 +21,8 @@ public:
 	static HRASCONN connectvpn(const wchar_t * entryname, const wchar_t *username, const wchar_t *password);
 	static void WINAPI RasDialFunc(UINT unMsg, RASCONNSTATE rasconnstate, DWORD dwError);
 	static bool disconnect(const wchar_t * entryname);
-public:
-	static void getEntryConnection(const wchar_t * entryname);
+	static bool getEntryConnection(const wchar_t * entryname, RASCONN & conn);
+	static bool deleteEntry(const wchar_t * entryname);
 public:
 	Vpn();
 	~Vpn();
